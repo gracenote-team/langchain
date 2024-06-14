@@ -434,10 +434,19 @@ class AzureSearch(VectorStore):
             (
                 Document(
                     page_content=result.pop(FIELDS_CONTENT),
-                    metadata=json.loads(result[FIELDS_METADATA])
-                    if FIELDS_METADATA in result
-                    else {
-                        k: v for k, v in result.items() if k != FIELDS_CONTENT_VECTOR
+                    metadata={
+                        **(
+                            {FIELDS_ID: result.pop(FIELDS_ID)}
+                        ),
+                        **(
+                            json.loads(result[FIELDS_METADATA])
+                            if FIELDS_METADATA in result
+                            else {
+                                k: v
+                                for k, v in result.items()
+                                if k != FIELDS_CONTENT_VECTOR
+                            }
+                        ),
                     },
                 ),
                 float(result["@search.score"]),
@@ -586,6 +595,11 @@ class AzureSearch(VectorStore):
                     page_content=result.pop(FIELDS_CONTENT),
                     metadata={
                         **(
+                            {FIELDS_ID: result.pop(FIELDS_ID)}
+                            if FIELDS_ID in result
+                            else {}
+                        ),
+                        **(
                             json.loads(result[FIELDS_METADATA])
                             if FIELDS_METADATA in result
                             else {
@@ -604,7 +618,9 @@ class AzureSearch(VectorStore):
                             if result.get("@search.captions")
                             else {},
                             "answers": semantic_answers_dict.get(
-                                json.loads(result["metadata"]).get("key"),
+                                json.loads(result[FIELDS_METADATA]).get("key")
+                                if FIELDS_METADATA in result
+                                else "",
                                 "",
                             ),
                         },
