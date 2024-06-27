@@ -502,11 +502,20 @@ class AzureSearch(VectorStore):
             (
                 Document(
                     page_content=result.pop(FIELDS_CONTENT),
-                    metadata=json.loads(result[FIELDS_METADATA])
-                    if FIELDS_METADATA in result
-                    else {
-                        k: v for k, v in result.items() if k != FIELDS_CONTENT_VECTOR
-                    },
+                    metadata={
+                        **(
+                            {FIELDS_ID: result.pop(FIELDS_ID)}
+                            if FIELDS_ID in result
+                            else {}
+                        ),
+                        **(
+                            json.loads(result[FIELDS_METADATA])
+                            if FIELDS_METADATA in result
+                            else {
+                                key: value for key, value in result.items() if key != FIELDS_CONTENT_VECTOR
+                            }
+                        ),
+                    }
                 ),
                 float(result["@search.score"]),
             )
